@@ -1,0 +1,34 @@
+.DS_Store
+Thumbs.db
+# Node deps
+node_modules/
+
+# Environment
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Coverage
+coverage/
+
+# Uploads and runtime files
+uploads/
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+ehthumbs.db
+Icon?

@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #ffffff;
+}
+
+body {
+  background: var(--bg);
+  color: #1f2937;
+}
+
+.gov-header {
+  background: linear-gradient(90deg, #0b5aa2 0%, #074377 100%);
+  color: white;
+}
+
+.gov-badge {
+  @apply inline-flex items-center rounded-full bg-govGold/20 text-govBlue px-3 py-1 text-xs font-semibold;
+}
+
+
