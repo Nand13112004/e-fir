@@ -9,6 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { t } = useTranslation();
+  const { token, user } = useAuth();
   const queryRole = new URLSearchParams(search).get('role') || 'POLICE';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +17,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuth((s) => s.login);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (token && user) {
+      if (user.role === 'POLICE') navigate('/police');
+      else if (user.role === 'JUDGE') navigate('/judge');
+      else if (user.role === 'ADMIN') navigate('/admin');
+    }
+  }, [token, user, navigate]);
 
   useEffect(() => {
     setError('');
@@ -119,13 +129,13 @@ export default function Login() {
             <div className="relative">
               <input 
                 type="email"
-                className="form-input pl-10" 
+                className="form-input pl-12" 
                 placeholder={t('emailPlaceholder')}
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-govGray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-govGray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
               </svg>
             </div>
@@ -138,13 +148,13 @@ export default function Login() {
             <div className="relative">
               <input 
                 type="password"
-                className="form-input pl-10" 
+                className="form-input pl-12" 
                 placeholder={t('passwordPlaceholder')}
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-govGray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-govGray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
@@ -179,17 +189,7 @@ t('login')
         {/* Footer */}
         <div className="mt-8 pt-6 border-t border-govGray-200">
           <div className="text-center space-y-4">
-            <p className="text-sm text-govGray-600">
-              {t('dontHaveAccount')}
-            </p>
-            <Link 
-              to={`/register?role=${role}`}
-              className="btn-outline w-full py-2 text-center"
-            >
-{t('createNewAccount')}
-            </Link>
-            
-            <div className="flex justify-center gap-4 mt-6">
+            <div className="flex justify-center gap-4">
               <Link 
                 to="/login?role=POLICE" 
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${

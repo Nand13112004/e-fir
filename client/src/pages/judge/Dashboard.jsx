@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../services/i18n';
 
 export default function JudgeDashboard() {
   const { token, user } = useAuth();
@@ -10,16 +11,23 @@ export default function JudgeDashboard() {
   const [assigned, setAssigned] = useState([]);
   const [today, setToday] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [stats, setStats] = useState({
     totalCases: 0,
     pendingCases: 0,
     completedToday: 0,
-    upcomingHearings: 0
+    upcomingHearings: 0,
+    submitted: 0,
+    inReview: 0,
+    closed: 0
   });
 
   useEffect(() => {
     (async () => {
+      if (!token) return;
       try {
+        setError('');
+        setLoading(true);
         const headers = { Authorization: `Bearer ${token}` };
         const [a, b] = await Promise.all([
           axios.get('/api/judge/assigned', { headers }),
@@ -34,17 +42,21 @@ export default function JudgeDashboard() {
         // Calculate stats
         setStats({
           totalCases: assignedData.length,
-          pendingCases: assignedData.filter(c => c.status === 'PENDING').length,
+          pendingCases: assignedData.filter(c => c.status === 'PENDING' || c.status === 'SUBMITTED').length,
           completedToday: todayData.filter(h => h.status === 'COMPLETED').length,
-          upcomingHearings: todayData.length
+          upcomingHearings: todayData.length,
+          submitted: assignedData.filter(c => c.status === 'SUBMITTED').length,
+          inReview: assignedData.filter(c => c.status === 'JUDGE_REVIEW' || c.status === 'HEARING_SCHEDULED').length,
+          closed: assignedData.filter(c => c.status === 'CLOSED').length
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        setError(error.response?.data?.message || t('failedToLoad') || 'Failed to load data');
       } finally {
         setLoading(false);
       }
     })();
-  }, [token]);
+  }, [token, t]);
 
   const courtName = user?.department || t('courtName', 'Central Court');
 
@@ -65,13 +77,28 @@ export default function JudgeDashboard() {
         <p className="text-govGray-600 text-lg">{t('courtManagementSystem')}</p>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        </div>
+      )}
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="stat-card">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <div className="stat-number">{stats.totalCases}</div>
               <div className="stat-label">{t('totalCases')}</div>
+              <div className="text-xs text-govGray-500 mt-1">
+                {stats.submitted} {t('submitted') || 'Submitted'} • {stats.inReview} {t('inReview') || 'In Review'}
+              </div>
             </div>
             <div className="w-12 h-12 bg-govBlue-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-govBlue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,9 +110,12 @@ export default function JudgeDashboard() {
 
         <div className="stat-card">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <div className="stat-number text-yellow-600">{stats.pendingCases}</div>
               <div className="stat-label">{t('pendingCases')}</div>
+              <div className="text-xs text-govGray-500 mt-1">
+                {stats.submitted} {t('awaitingAction') || 'Awaiting Action'}
+              </div>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,9 +127,12 @@ export default function JudgeDashboard() {
 
         <div className="stat-card">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <div className="stat-number text-govGreen-600">{stats.completedToday}</div>
               <div className="stat-label">{t('completedToday')}</div>
+              <div className="text-xs text-govGray-500 mt-1">
+                {stats.closed} {t('closed') || 'Closed'} {t('total') || 'Total'}
+              </div>
             </div>
             <div className="w-12 h-12 bg-govGreen-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-govGreen-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,9 +144,12 @@ export default function JudgeDashboard() {
 
         <div className="stat-card">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <div className="stat-number text-govOrange-600">{stats.upcomingHearings}</div>
               <div className="stat-label">{t('upcomingHearings')}</div>
+              <div className="text-xs text-govGray-500 mt-1">
+                {t('scheduledToday') || 'Scheduled Today'}
+              </div>
             </div>
             <div className="w-12 h-12 bg-govOrange-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-govOrange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,8 +176,8 @@ export default function JudgeDashboard() {
               <svg className="w-16 h-16 text-govGray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-govGray-500 font-medium">आज कोई सुनवाई निर्धारित नहीं है।</p>
-              <p className="text-sm text-govGray-400 mt-1">सभी मामले स्थगित या पूर्ण हैं।</p>
+              <p className="text-govGray-500 font-medium">{t('noHearingsToday')}</p>
+              <p className="text-sm text-govGray-400 mt-1">{t('allCasesPostponed')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -150,24 +186,24 @@ export default function JudgeDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-sm font-semibold text-govBlue-600">
-                        {new Date(h.date).toLocaleTimeString('hi-IN', { 
+                        {new Date(h.date).toLocaleTimeString(i18n.language === 'en' ? 'en-US' : i18n.language === 'hi' ? 'hi-IN' : 'gu-IN', { 
                           hour: '2-digit', 
                           minute: '2-digit',
                           hour12: true 
                         })}
                       </span>
-                      <span className="status-badge status-in-progress">सुनवाई</span>
+                      <span className="status-badge status-in-progress">{t('hearing')}</span>
                     </div>
                     <div className="text-sm text-govGray-800 font-medium">
-                      शिकायत संख्या: {h.complaintId}
+                      {t('complaintNumber')}: {h.complaintId}
                     </div>
                     <div className="text-xs text-govGray-600 mt-1">
-                      कक्ष: {h.courtroom || 'निर्धारित नहीं'}
+                      {t('courtroom')}: {h.courtroom || t('notScheduled')}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button className="btn-primary text-xs py-1 px-3">
-                      विवरण देखें
+                      {t('viewDetails')}
                     </button>
                   </div>
                 </div>
@@ -183,7 +219,7 @@ export default function JudgeDashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <div className="flex-1">
-              <h3 className="gov-card-title">न्यायालयीन शिकायतें</h3>
+              <h3 className="gov-card-title">{t('courtComplaints')}</h3>
               <p className="text-sm text-govGray-600 mt-1">{courtName}</p>
             </div>
           </div>
@@ -193,15 +229,15 @@ export default function JudgeDashboard() {
               <svg className="w-16 h-16 text-govGray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="text-govGray-500 font-medium">वर्तमान में कोई शिकायत निर्धारित नहीं है।</p>
-              <p className="text-sm text-govGray-400 mt-1">नई शिकायतें यहाँ दिखाई जाएंगी।</p>
+              <p className="text-govGray-500 font-medium">{t('noComplaints')}</p>
+              <p className="text-sm text-govGray-400 mt-1">{t('noComplaintsDesc')}</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {assigned.map((c) => (
                 <Link 
                   key={c._id} 
-                  to={`/judge/complaints/${c._id}`} 
+                  to={`/judge/complaint/${c._id}`} 
                   className="block p-4 bg-white border border-govGray-200 rounded-lg hover:shadow-md hover:border-govBlue-300 transition-all duration-200"
                 >
                   <div className="flex items-start justify-between">
@@ -211,21 +247,29 @@ export default function JudgeDashboard() {
                           {c.complaintNumber}
                         </span>
                         <span className={`status-badge ${
+                          c.status === 'SUBMITTED' ? 'status-pending' :
                           c.status === 'PENDING' ? 'status-pending' :
+                          c.status === 'JUDGE_REVIEW' ? 'status-in-progress' :
+                          c.status === 'HEARING_SCHEDULED' ? 'status-in-progress' :
                           c.status === 'IN_PROGRESS' ? 'status-in-progress' :
+                          c.status === 'CLOSED' ? 'status-completed' :
                           c.status === 'COMPLETED' ? 'status-completed' :
                           'status-pending'
                         }`}>
-                          {c.status === 'PENDING' ? 'लंबित' :
-                           c.status === 'IN_PROGRESS' ? 'प्रगति में' :
-                           c.status === 'COMPLETED' ? 'पूर्ण' : c.status}
+                          {c.status === 'SUBMITTED' ? t('submitted') || 'SUBMITTED' :
+                           c.status === 'PENDING' ? t('pending') :
+                           c.status === 'JUDGE_REVIEW' ? t('inReview') || 'In Review' :
+                           c.status === 'HEARING_SCHEDULED' ? t('hearingScheduled') || 'Hearing Scheduled' :
+                           c.status === 'IN_PROGRESS' ? t('inProgress') :
+                           c.status === 'CLOSED' ? t('closed') :
+                           c.status === 'COMPLETED' ? t('completed') : c.status}
                         </span>
                       </div>
                       <h4 className="text-sm font-medium text-govGray-800 mb-1">
                         {c.title}
                       </h4>
                       <div className="text-xs text-govGray-500">
-                        दिनांक: {new Date(c.createdAt).toLocaleDateString('hi-IN')}
+                        {t('date')}: {new Date(c.createdAt).toLocaleDateString(i18n.language === 'en' ? 'en-US' : i18n.language === 'hi' ? 'hi-IN' : 'gu-IN')}
                       </div>
                     </div>
                     <div className="ml-4">
@@ -247,7 +291,7 @@ export default function JudgeDashboard() {
           <svg className="gov-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
-          <h3 className="gov-card-title">त्वरित कार्य</h3>
+          <h3 className="gov-card-title">{t('quickActions')}</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -256,8 +300,8 @@ export default function JudgeDashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <div className="text-left">
-              <div className="font-medium text-govBlue-800">सभी मामले देखें</div>
-              <div className="text-xs text-govBlue-600">विस्तृत सूची</div>
+              <div className="font-medium text-govBlue-800">{t('viewAllCases')}</div>
+              <div className="text-xs text-govBlue-600">{t('detailedList')}</div>
             </div>
           </button>
           
@@ -266,8 +310,8 @@ export default function JudgeDashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <div className="text-left">
-              <div className="font-medium text-govOrange-800">सुनवाई निर्धारित करें</div>
-              <div className="text-xs text-govOrange-600">नई तारीख</div>
+              <div className="font-medium text-govOrange-800">{t('scheduleHearing')}</div>
+              <div className="text-xs text-govOrange-600">{t('newDate')}</div>
             </div>
           </button>
           
@@ -276,8 +320,8 @@ export default function JudgeDashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <div className="text-left">
-              <div className="font-medium text-govGreen-800">रिपोर्ट देखें</div>
-              <div className="text-xs text-govGreen-600">मासिक सारांश</div>
+              <div className="font-medium text-govGreen-800">{t('viewReports')}</div>
+              <div className="text-xs text-govGreen-600">{t('monthlySummary')}</div>
             </div>
           </button>
         </div>

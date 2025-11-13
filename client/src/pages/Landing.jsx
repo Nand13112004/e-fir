@@ -1,11 +1,64 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../store/auth';
+import { useEffect, useState } from 'react';
 
 export default function Landing() {
   const { t } = useTranslation();
+  const { token, user } = useAuth();
+  const navigate = useNavigate();
+  const [showReminder, setShowReminder] = useState(false);
+
+  // Check if user is logged in and show reminder
+  useEffect(() => {
+    if (token && user) {
+      setShowReminder(true);
+    }
+  }, [token, user]);
+
+  const handleContinueToLanding = () => {
+    setShowReminder(false);
+  };
+
+  const handleGoToDashboard = () => {
+    if (user?.role === 'POLICE') navigate('/police');
+    else if (user?.role === 'JUDGE') navigate('/judge');
+    else if (user?.role === 'ADMIN') navigate('/admin');
+  };
   
   return (
     <div className="space-y-8">
+      {/* Reminder Modal for Logged-in Users */}
+      {showReminder && token && user && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <svg className="w-6 h-6 text-govOrange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-govGray-800">You are already logged in</h3>
+            </div>
+            <p className="text-govGray-600 mb-4">
+              You are currently logged in as <span className="font-semibold">{user.name || user.email}</span>. 
+              Would you like to go to your dashboard or continue browsing?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleGoToDashboard}
+                className="btn-primary flex-1"
+              >
+                Go to Dashboard
+              </button>
+              <button
+                onClick={handleContinueToLanding}
+                className="btn-outline flex-1"
+              >
+                Continue Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-govBlue-600 to-govBlue-800 text-white rounded-2xl overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
@@ -26,17 +79,11 @@ export default function Landing() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
-                to="/register" 
+                to="/login" 
                 className="bg-govOrange-500 hover:bg-govOrange-600 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-{t('createAccount')}
+                {t('login')}
               </Link>
-              <a 
-                href="#roles" 
-                className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200"
-              >
-{t('login')}
-              </a>
             </div>
           </div>
         </div>
@@ -97,11 +144,10 @@ export default function Landing() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <div className="status-badge status-in-progress mb-3">{t('police')} | पुलिस</div>
-              <h3 className="text-lg font-semibold text-govGray-800 mb-2">Police Officer</h3>
+              <div className="status-badge status-in-progress mb-3">{t('police')}</div>
+              <h3 className="text-lg font-semibold text-govGray-800 mb-2">{t('police')}</h3>
               <p className="text-sm text-govGray-600 leading-relaxed">
-                शिकायत दर्ज करें, ट्रैक करें और न्यायाधीश को भेजें<br/>
-                <span className="text-xs">File complaints, track cases, forward to judge</span>
+                {t('policeDesc')}
               </p>
             </div>
           </Link>
@@ -116,11 +162,10 @@ export default function Landing() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                 </svg>
               </div>
-              <div className="status-badge status-pending mb-3">{t('judge')} | न्यायाधीश</div>
-              <h3 className="text-lg font-semibold text-govGray-800 mb-2">Judge</h3>
+              <div className="status-badge status-pending mb-3">{t('judge')}</div>
+              <h3 className="text-lg font-semibold text-govGray-800 mb-2">{t('judge')}</h3>
               <p className="text-sm text-govGray-600 leading-relaxed">
-                मामलों की समीक्षा, सुनवाई निर्धारण और न्याय<br/>
-                <span className="text-xs">Review cases, schedule hearings, pass judgment</span>
+                {t('judgeDesc')}
               </p>
             </div>
           </Link>
@@ -136,8 +181,8 @@ export default function Landing() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <div className="status-badge status-completed mb-3">{t('admin')} | प्रशासक</div>
-              <h3 className="text-lg font-semibold text-govGray-800 mb-2">Administrator</h3>
+              <div className="status-badge status-completed mb-3">{t('admin')}</div>
+              <h3 className="text-lg font-semibold text-govGray-800 mb-2">{t('admin')}</h3>
               <p className="text-sm text-govGray-600 leading-relaxed">
                 उपयोगकर्ता प्रबंधन और सिस्टم आँकड़े<br/>
                 <span className="text-xs">Manage users, view system statistics</span>
@@ -150,9 +195,9 @@ export default function Landing() {
       {/* Additional Information */}
       <div className="bg-gradient-to-r from-govGray-100 to-white rounded-xl p-8 border border-govGray-200">
         <div className="text-center">
-          <h3 className="text-2xl font-semibold text-govGray-800 mb-4">सहायता चाहिए?</h3>
+          <h3 className="text-2xl font-semibold text-govGray-800 mb-4">{t('needHelp')}</h3>
           <p className="text-govGray-600 mb-6">
-            यदि आपको सिस्टम का उपयोग करने में कोई समस्या है तो कृपया सहायता केंद्र से संपर्क करें
+            {t('helpDesc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
@@ -162,7 +207,7 @@ export default function Landing() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              उपयोग गाइड
+              {t('userGuide')}
             </a>
             <a 
               href="#" 
@@ -171,7 +216,7 @@ export default function Landing() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
-              संपर्क करें
+              {t('contactUs')}
             </a>
           </div>
         </div>

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../store/auth';
+import { useTranslation } from 'react-i18next';
+import EvidenceTable from '../../components/EvidenceTable';
 
 const courtsLabels = {
   'Ahmedabad Central Court': 'Ahmedabad Central Court',
@@ -23,6 +25,7 @@ const statusBadge = (status) => {
 };
 
 export default function ComplaintDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -251,25 +254,23 @@ export default function ComplaintDetail() {
         </section>
       ) : null}
 
-      <section className="border rounded p-4">
-        <h2 className="font-semibold mb-2">Evidence</h2>
-        {complaint.evidence?.length ? (
-          <ul className="space-y-2 text-sm">
-            {complaint.evidence.map((item, idx) => (
-              <li key={`${item.storedName}-${idx}`} className="flex items-center justify-between border rounded px-3 py-2">
-                <div>
-                  <div className="font-medium capitalize">{item.type}</div>
-                  <div className="text-xs text-gray-500">{item.originalName}</div>
-                </div>
-                <a className="text-govBlue text-sm underline" href={item.url} target="_blank" rel="noreferrer">
-                  View
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-500">No evidence uploaded.</p>
-        )}
+      <section className="gov-card">
+        <div className="gov-card-header">
+          <svg className="gov-card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h2 className="gov-card-title">{t('evidence')}</h2>
+        </div>
+        <div className="mt-4">
+          <EvidenceTable 
+            evidence={complaint.evidence || []} 
+            complaintId={complaint._id}
+            onEvidenceUpdate={() => {
+              // Reload complaint data
+              window.location.reload();
+            }}
+          />
+        </div>
       </section>
 
       <section className="border rounded p-4 space-y-4">

@@ -10,10 +10,14 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await axios.get('/api/admin/stats', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStats(data);
+      try {
+        const { data } = await axios.get('/api/admin/stats', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(data);
+      } catch (error) {
+        console.error('Error fetching admin stats:', error);
+      }
     })();
   }, [token]);
 
@@ -39,7 +43,9 @@ export default function AdminDashboard() {
             <div className="text-2xl font-semibold">{stats.police}</div>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="text-center py-8 text-gray-500">{t('loading')}</div>
+      )}
     </div>
   );
 }

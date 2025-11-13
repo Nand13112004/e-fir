@@ -115,6 +115,57 @@ router.get('/:id/hearings', auth(['POLICE', 'JUDGE', 'ADMIN']), async (req, res,
   }
 });
 
+// Upload evidence to existing complaint
+router.post(
+  '/evidence',
+  auth(['POLICE', 'JUDGE']),
+  upload.array('evidence', 10),
+  async (req, res, next) => {
+    try {
+      const { complaintId } = req.body;
+      if (!complaintId) {
+        return res.status(400).json({ message: 'Complaint ID is required' });
+      }
+
+      const complaint = await Complaint.findById(complaintId);
+      if (!complaint) {
+        return res.status(404).json({ message: 'Complaint not found' });
+      }
+
+      // Check if user has permission
+      if (req.user.role === 'POLICE' && complaint.createdByPoliceId !== req.user.userId) {
+        return res.status(403).json({ message: 'Not authorized to add evidence to this complaint' });
+      }
+
+      const filesToEvidence = (files) =>
+        (files || []).map((f) => {
+          // Determine type based on mime type
+          let type = 'document';
+          if (f.mimetype.startsWith('image/')) type = 'photo';
+          else if (f.mimetype.startsWith('video/')) type = 'video';
+          else if (f.mimetype.startsWith('audio/')) type = 'audio';
+
+          return {
+            type,
+            originalName: f.originalname,
+            storedName: f.filename,
+            mimeType: f.mimetype,
+            size: f.size,
+            url: `/uploads/${f.filename}`
+          };
+        });
+
+      const newEvidence = filesToEvidence(req.files);
+      complaint.evidence = [...(complaint.evidence || []), ...newEvidence];
+      await complaint.save();
+
+      res.status(200).json({ message: 'Evidence uploaded successfully', evidence: newEvidence });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 module.exports = router;
 
 
