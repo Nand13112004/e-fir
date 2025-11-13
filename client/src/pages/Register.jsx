@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 const courts = ['Ahmedabad Central Court', 'Surat Court', 'Rajkot Court', 'Baroda Court', 'Anand Court'];
 
 export default function Register() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const initialRole = params.get('role') || 'POLICE';
@@ -29,11 +31,11 @@ export default function Register() {
     e.preventDefault();
     setError('');
     if (!fullName || !email || !password || !role) {
-      setError('All fields are required');
+      setError(t('allFieldsRequired'));
       return;
     }
     if (role === 'JUDGE' && !court) {
-      setError('Please select a court');
+      setError(t('pleaseSelectCourt'));
       return;
     }
     try {
@@ -41,7 +43,7 @@ export default function Register() {
       await axios.post('/api/auth/register', { fullName, email, password, role, court });
       navigate(`/login?role=${role}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || t('registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -50,32 +52,32 @@ export default function Register() {
   return (
     <div className="max-w-md mx-auto">
       <form className="border rounded p-6 space-y-4" onSubmit={onSubmit}>
-        <h2 className="text-xl font-semibold">Create account</h2>
+        <h2 className="text-xl font-semibold">{t('createAccount')}</h2>
         {error ? <div className="text-red-600 text-sm">{error}</div> : null}
         <div>
-          <label className="block text-sm mb-1">Full Name</label>
+          <label className="block text-sm mb-1">{t('fullName')}</label>
           <input className="border rounded w-full px-3 py-2" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         </div>
         <div>
-          <label className="block text-sm mb-1">Email</label>
+          <label className="block text-sm mb-1">{t('email')}</label>
           <input className="border rounded w-full px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
-          <label className="block text-sm mb-1">Password</label>
+          <label className="block text-sm mb-1">{t('password')}</label>
           <input type="password" className="border rounded w-full px-3 py-2" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <div>
-          <label className="block text-sm mb-1">Role</label>
+          <label className="block text-sm mb-1">{t('role')}</label>
           <select className="border rounded w-full px-3 py-2" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="POLICE">Police</option>
-            <option value="JUDGE">Judge</option>
-            <option value="ADMIN">Admin</option>
+            <option value="POLICE">{t('police')}</option>
+            <option value="JUDGE">{t('judge')}</option>
+            <option value="ADMIN">{t('admin')}</option>
           </select>
-          <p className="text-xs text-gray-500 mt-1">Note: In production, only Admin can create new users.</p>
+          <p className="text-xs text-gray-500 mt-1">{t('adminOnlyNote')}</p>
         </div>
         {role === 'JUDGE' ? (
           <div>
-            <label className="block text-sm mb-1">Court</label>
+            <label className="block text-sm mb-1">{t('court')}</label>
             <select className="border rounded w-full px-3 py-2" value={court} onChange={(e) => setCourt(e.target.value)}>
               {courts.map((c) => (
                 <option key={c} value={c}>
@@ -86,7 +88,7 @@ export default function Register() {
           </div>
         ) : null}
         <button disabled={loading} className="bg-govBlue text-white px-4 py-2 rounded w-full">
-          {loading ? 'Creating...' : 'Register'}
+          {loading ? t('creating') : t('register')}
         </button>
       </form>
     </div>
