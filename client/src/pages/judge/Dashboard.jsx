@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../services/i18n';
@@ -8,6 +8,7 @@ import i18n from '../../services/i18n';
 export default function JudgeDashboard() {
   const { token, user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [assigned, setAssigned] = useState([]);
   const [today, setToday] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +130,7 @@ export default function JudgeDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="stat-number text-govGreen-600">{stats.completedToday}</div>
-              <div className="stat-label">{t('completedToday')}</div>
+              <div className="stat-label">{t('closedToday') || 'Closed Today'}</div>
               <div className="text-xs text-govGray-500 mt-1">
                 {stats.closed} {t('closed') || 'Closed'} {t('total') || 'Total'}
               </div>
@@ -192,7 +193,11 @@ export default function JudgeDashboard() {
                           hour12: true 
                         })}
                       </span>
-                      <span className="status-badge status-in-progress">{t('hearing')}</span>
+                      <span className={`status-badge ${
+                        h.status === 'COMPLETED' ? 'status-completed' : 'status-in-progress'
+                      }`}>
+                        {h.status === 'COMPLETED' ? t('closed') || 'Closed' : t('hearing')}
+                      </span>
                     </div>
                     <div className="text-sm text-govGray-800 font-medium">
                       {t('complaintNumber')}: {h.complaintId}
@@ -202,9 +207,32 @@ export default function JudgeDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="btn-primary text-xs py-1 px-3">
+                    <Link 
+                      to={`/judge/complaint/${h.complaintId?._id || h.complaintId}`}
+                      className="btn-primary text-xs py-1 px-3"
+                    >
                       {t('viewDetails')}
-                    </button>
+                    </Link>
+                    {h.status !== 'COMPLETED' && (
+                      <button
+                        onClick={async () => {
+                          if (window.confirm('Mark this hearing as closed?')) {
+                            try {
+                              const headers = { Authorization: `Bearer ${token}` };
+                              await axios.post(`/api/judge/hearing/${h._id}/complete`, {}, { headers });
+                              // Reload data
+                              const { data } = await axios.get('/api/judge/hearings/today', { headers });
+                              setToday(data || []);
+                            } catch (err) {
+                              alert(err.response?.data?.message || 'Failed to close hearing');
+                            }
+                          }
+                        }}
+                        className="bg-govGreen-600 hover:bg-govGreen-700 text-white text-xs py-1 px-3 rounded-lg font-medium transition-colors"
+                      >
+                        {t('close') || 'Close'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -262,7 +290,7 @@ export default function JudgeDashboard() {
                            c.status === 'HEARING_SCHEDULED' ? t('hearingScheduled') || 'Hearing Scheduled' :
                            c.status === 'IN_PROGRESS' ? t('inProgress') :
                            c.status === 'CLOSED' ? t('closed') :
-                           c.status === 'COMPLETED' ? t('completed') : c.status}
+                           c.status === 'COMPLETED' ? t('closed') : c.status}
                         </span>
                       </div>
                       <h4 className="text-sm font-medium text-govGray-800 mb-1">
@@ -295,7 +323,10 @@ export default function JudgeDashboard() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center gap-3 p-4 bg-govBlue-50 border border-govBlue-200 rounded-lg hover:bg-govBlue-100 transition-colors">
+          <Link 
+            to="/judge/cases"
+            className="flex items-center gap-3 p-4 bg-govBlue-50 border border-govBlue-200 rounded-lg hover:bg-govBlue-100 transition-colors"
+          >
             <svg className="w-6 h-6 text-govBlue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -303,9 +334,20 @@ export default function JudgeDashboard() {
               <div className="font-medium text-govBlue-800">{t('viewAllCases')}</div>
               <div className="text-xs text-govBlue-600">{t('detailedList')}</div>
             </div>
-          </button>
+          </Link>
           
-          <button className="flex items-center gap-3 p-4 bg-govOrange-50 border border-govOrange-200 rounded-lg hover:bg-govOrange-100 transition-colors">
+          <button 
+            onClick={() => {
+              // Scroll to complaints section or show a modal to schedule hearing
+              const firstComplaint = assigned.find(c => c.status === 'SUBMITTED' || c.status === 'PENDING');
+              if (firstComplaint) {
+                navigate(`/judge/complaint/${firstComplaint._id}`);
+              } else {
+                alert('No pending cases available to schedule hearing');
+              }
+            }}
+            className="flex items-center gap-3 p-4 bg-govOrange-50 border border-govOrange-200 rounded-lg hover:bg-govOrange-100 transition-colors"
+          >
             <svg className="w-6 h-6 text-govOrange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -315,7 +357,10 @@ export default function JudgeDashboard() {
             </div>
           </button>
           
-          <button className="flex items-center gap-3 p-4 bg-govGreen-50 border border-govGreen-200 rounded-lg hover:bg-govGreen-100 transition-colors">
+          <Link
+            to="/judge/reports"
+            className="flex items-center gap-3 p-4 bg-govGreen-50 border border-govGreen-200 rounded-lg hover:bg-govGreen-100 transition-colors"
+          >
             <svg className="w-6 h-6 text-govGreen-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -323,7 +368,7 @@ export default function JudgeDashboard() {
               <div className="font-medium text-govGreen-800">{t('viewReports')}</div>
               <div className="text-xs text-govGreen-600">{t('monthlySummary')}</div>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

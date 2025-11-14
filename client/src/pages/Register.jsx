@@ -50,7 +50,7 @@ export default function Register() {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto" style={{ marginTop: '2rem' }}>
       <form className="border rounded p-6 space-y-4" onSubmit={onSubmit}>
         <h2 className="text-xl font-semibold">{t('createAccount')}</h2>
         {error ? <div className="text-red-600 text-sm">{error}</div> : null}

@@ -2,12 +2,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
 import { useEffect, useState } from 'react';
+import HelpFAQModal from '../components/HelpFAQModal';
 
 export default function Landing() {
   const { t } = useTranslation();
-  const { token, user } = useAuth();
+  const { token, user, logout } = useAuth();
   const navigate = useNavigate();
   const [showReminder, setShowReminder] = useState(false);
+  const [showHelpFAQ, setShowHelpFAQ] = useState(false);
 
   // Check if user is logged in and show reminder
   useEffect(() => {
@@ -19,11 +21,10 @@ export default function Landing() {
   const handleContinueToLanding = () => {
     setShowReminder(false);
   };
-
+  
   const handleGoToDashboard = () => {
-    if (user?.role === 'POLICE') navigate('/police');
-    else if (user?.role === 'JUDGE') navigate('/judge');
-    else if (user?.role === 'ADMIN') navigate('/admin');
+    logout();
+    navigate('/');
   };
   
   return (
@@ -218,9 +219,21 @@ export default function Landing() {
               </svg>
               {t('contactUs')}
             </a>
+            <button
+              onClick={() => setShowHelpFAQ(true)}
+              className="btn-outline inline-flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Help & FAQ
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Help/FAQ Modal */}
+      <HelpFAQModal isOpen={showHelpFAQ} onClose={() => setShowHelpFAQ(false)} />
     </div>
   );
 }

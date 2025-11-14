@@ -97,7 +97,7 @@ export default function Login() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="gov-card">
+      <div className="gov-card" style={{ marginTop: '2rem' }}>
         {/* Header */}
         <div className="text-center mb-8">
           <div className={`w-16 h-16 bg-${roleInfo.color}-100 rounded-full flex items-center justify-center mx-auto mb-4`}>
@@ -128,14 +128,14 @@ export default function Login() {
             <div className="relative">
               <input 
                 type="email"
-                className="form-input pl-12" 
+                className="form-input pl-12 pr-4" 
                 placeholder={t('emailPlaceholder')}
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-govGray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-govGray-400 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
           </div>
@@ -147,13 +147,13 @@ export default function Login() {
             <div className="relative">
               <input 
                 type="password"
-                className="form-input pl-12" 
+                className="form-input pl-12 pr-4" 
                 placeholder={t('passwordPlaceholder')}
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-govGray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-govGray-400 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>

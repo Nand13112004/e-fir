@@ -30,16 +30,17 @@ router.get('/users', auth(['ADMIN']), async (req, res, next) => {
 
 router.post('/users', auth(['ADMIN']), async (req, res, next) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    const { fullName, email, password, role, department } = req.body;
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ message: 'Email already registered' });
     const user = await User.create({
       fullName,
       email,
       role,
+      department: department || '',
       passwordHash: User.hashPassword(password)
     });
-    res.status(201).json({ id: user._id, email: user.email, role: user.role });
+    res.status(201).json({ id: user._id, email: user.email, role: user.role, department: user.department });
   } catch (e) {
     next(e);
   }

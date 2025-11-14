@@ -322,7 +322,7 @@ export default function ComplaintDetail() {
               />
             </div>
           </div>
-          <button onClick={handleAccept} className="mt-3 bg-govBlue text-white px-4 py-2 rounded">
+          <button onClick={handleAccept} className="mt-3 bg-govBlue-600 text-black px-4 py-2 rounded font-semibold hover:bg-govBlue-700 transition-colors">
             Accept & Schedule Hearing
           </button>
         </div>

@@ -56,7 +56,25 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 connectDb()
-  .then(() => {
+  .then(async () => {
+    // Seed admin user if it doesn't exist
+    try {
+      const User = require('./models/User');
+      const existingAdmin = await User.findOne({ email: 'dev@gmail.com' });
+      if (!existingAdmin) {
+        await User.create({
+          fullName: 'Developer Admin',
+          email: 'dev@gmail.com',
+          passwordHash: User.hashPassword('12'),
+          role: 'ADMIN',
+          isActive: true
+        });
+        console.log('Admin user created: dev@gmail.com / 12');
+      }
+    } catch (err) {
+      console.error('Error seeding admin:', err.message);
+    }
+    
     server.listen(PORT, () => {
       // eslint-disable-next-line no-console
       console.log(`Server running on http://localhost:${PORT}`);

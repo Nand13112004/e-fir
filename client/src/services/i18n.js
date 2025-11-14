@@ -36,7 +36,8 @@ const resources = {
       dashboard: 'Dashboard',
       totalCases: 'Total Cases',
       pendingCases: 'Pending Cases',
-      completedToday: 'Completed Today',
+      completedToday: 'Closed Today',
+      closedToday: 'Closed Today',
       upcomingHearings: 'Upcoming Hearings',
       
       // Judge Dashboard
@@ -68,9 +69,9 @@ const resources = {
       password: 'Password',
       name: 'Full Name',
       department: 'Department',
-      emailPlaceholder: 'Example: user@example.com',
-      passwordPlaceholder: 'Enter your password',
-      namePlaceholder: 'Enter your full name',
+      emailPlaceholder: '    user@example.com',
+      passwordPlaceholder: '    Enter your password',
+      namePlaceholder: '   Enter your full name',
       
       // Status
       pending: 'Pending',
@@ -364,8 +365,8 @@ const resources = {
       password: 'पासवर्ड',
       name: 'पूरा नाम',
       department: 'विभाग',
-      emailPlaceholder: 'उदाहरण: user@example.com',
-      passwordPlaceholder: 'अपना पासवर्ड दर्ज करें',
+      emailPlaceholder: '    उदाहरण:user@example.com',
+      passwordPlaceholder: '    अपना पासवर्ड दर्ज करें',
       namePlaceholder: 'अपना पूरा नाम दर्ज करें',
       
       // Status
@@ -656,8 +657,8 @@ const resources = {
       password: 'પાસવર્ડ',
       name: 'પૂરું નામ',
       department: 'વિભાગ',
-      emailPlaceholder: 'ઉદાહરણ: user@example.com',
-      passwordPlaceholder: 'તમારો પાસવર્ડ દાખલ કરો',
+      emailPlaceholder: '    ઉદાહરણ:user@example.com',
+      passwordPlaceholder: '    તમારો પાસવર્ડ દાખલ કરો',
       namePlaceholder: 'તમારું પૂરું નામ દાખલ કરો',
       
       // Status

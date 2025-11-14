@@ -184,6 +184,47 @@ router.get('/hearings/today', auth(['JUDGE']), async (req, res, next) => {
   }
 });
 
+router.post('/hearing/:hearingId/complete', auth(['JUDGE']), async (req, res, next) => {
+  try {
+    const { hearingId } = req.params;
+    const hearing = await Hearing.findByIdAndUpdate(
+      hearingId,
+      {
+        $set: { status: 'COMPLETED' },
+        $push: {
+          history: {
+            action: 'HEARING_COMPLETED',
+            by: req.user.userId,
+            details: req.body.notes || 'Hearing marked as completed',
+            at: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
+    
+    if (!hearing) {
+      return res.status(404).json({ message: 'Hearing not found' });
+    }
+
+    // Optionally update complaint status if all hearings are completed
+    const complaint = await Complaint.findById(hearing.complaintId);
+    if (complaint) {
+      const allHearings = await Hearing.find({ complaintId: hearing.complaintId });
+      const allCompleted = allHearings.every(h => h.status === 'COMPLETED');
+      if (allCompleted && complaint.status === 'HEARING_SCHEDULED') {
+        await Complaint.findByIdAndUpdate(hearing.complaintId, {
+          $set: { status: 'IN_PROGRESS' }
+        });
+      }
+    }
+
+    res.json({ ok: true, hearing });
+  } catch (e) {
+    next(e);
+  }
+});
+
 module.exports = router;
 
 
