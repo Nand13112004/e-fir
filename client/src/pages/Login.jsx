@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../store/auth';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 export default function Login() {
@@ -13,7 +12,7 @@ export default function Login() {
   const queryRole = new URLSearchParams(search).get('role') || 'POLICE';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role] = useState(queryRole);
+  const [role, setRole] = useState(queryRole);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuth((s) => s.login);
@@ -190,30 +189,30 @@ t('login')
         <div className="mt-8 pt-6 border-t border-govGray-200">
           <div className="text-center space-y-4">
             <div className="flex justify-center gap-4">
-              <Link 
-                to="/login?role=POLICE" 
+              <button 
+                onClick={() => setRole('POLICE')}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                   role === 'POLICE' ? 'bg-govBlue-100 text-govBlue-800' : 'text-govGray-600 hover:text-govBlue-600'
                 }`}
               >
-{t('police')}
-              </Link>
-              <Link 
-                to="/login?role=JUDGE" 
+                {t('police')}
+              </button>
+              <button 
+                onClick={() => setRole('JUDGE')}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                   role === 'JUDGE' ? 'bg-govOrange-100 text-govOrange-800' : 'text-govGray-600 hover:text-govOrange-600'
                 }`}
               >
-{t('judge')}
-              </Link>
-              <Link 
-                to="/login?role=ADMIN" 
+                {t('judge')}
+              </button>
+              <button 
+                onClick={() => setRole('ADMIN')}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                   role === 'ADMIN' ? 'bg-govGreen-100 text-govGreen-800' : 'text-govGray-600 hover:text-govGreen-600'
                 }`}
               >
-{t('admin')}
-              </Link>
+                {t('admin')}
+              </button>
             </div>
           </div>
         </div>
